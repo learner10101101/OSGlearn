@@ -25,7 +25,9 @@ target_link_libraries(${PROJECT_NAME} debug osgd.lib osgDBd.lib osgViewerd.lib)
 file(GLOB OSG_DLLS dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/bin/*dll)
 file(COPY ${OSG_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
 # 拷贝插件DLL
-file(GLOB OSG_PLUGIN_DLLS dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/bin/osgPlugins-*/osgdb_png*.dll)
-file(COPY ${OSG_PLUGIN_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
+file(GLOB OSG_PLUGIN_DLL_PNG dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/bin/osgPlugins-*/osgdb_png*.dll)# 拷贝读取.png插件DLL
+file(COPY ${OSG_PLUGIN_DLL_PNG} DESTINATION ${CMAKE_BINARY_DIR})
+file(GLOB OSG_PLUGIN_DLL_OSG dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/bin/osgPlugins-*/osgdb_osg*.dll)# 拷贝读取.osg插件DLL
+file(COPY ${OSG_PLUGIN_DLL_OSG} DESTINATION ${CMAKE_BINARY_DIR})
 
 # TODO: 如有需要，请添加测试并安装目标。
