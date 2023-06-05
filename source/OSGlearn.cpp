@@ -13,13 +13,7 @@
 #include <osgDB/Registry>
 #include <osgDB/WriteFile>
 #include <osg/Notify>
-#include <osg/StateSet>
-#include <osg/StateAttribute>
-#include <osg/ShadeModel>
-#include <osg/CullFace>
-#include <osg/PolygonMode>
-#include <osg/LineWidth>
-#include <osg/MatrixTransform>
+#include <osg/Material>
 
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
@@ -74,27 +68,51 @@ osg::ref_ptr<osg::Node> createSceneGraph2()
 	return geode.get();
 }
 
-// 修改渲染状态
-osg::ref_ptr<osg::Geometry> createDrawable()// 这个Geometry与案例不符
+// 扩展createSceneGraph2的场景，添加指定数量的矩形图形
+osg::ref_ptr<osg::Node> createSceneGraph3()
 {
-	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry();
+	// 创建Geode对象
+	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+	// 创建Geometry对象
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+	// Geode对象引用Geometry对象
+	geode->addDrawable(geom.get());
 
-	// 创建四个顶点的数组
+	// 创建顶点数组
 	osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array;
 	geom->setVertexArray(v.get());// 注意，这里v是指针，但是用“.”来使用get()函数返回指针
-	v->push_back(osg::Vec3(-1.f, 0.f, -1.f));
-	v->push_back(osg::Vec3(1.f, 0.f, -1.f));
-	v->push_back(osg::Vec3(1.f, 0.f, 1.f));
-	v->push_back(osg::Vec3(-1.f, 0.f, 1.f));
 
-	// 创建四种颜色的数组
+		// 创建顶点颜色
 	osg::ref_ptr<osg::Vec4Array> c = new osg::Vec4Array;
 	geom->setColorArray(c.get());
 	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-	c->push_back(osg::Vec4(1.f, 0.f, 0.f, 1.f));
-	c->push_back(osg::Vec4(0.f, 1.f, 0.f, 1.f));
-	c->push_back(osg::Vec4(0.f, 0.f, 1.f, 1.f));
-	c->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.f));
+
+	int32_t num = 100;
+	int32_t graphNum = num * num;
+	float visualLen = 1.0 / num;
+	float offsize = 0.1 * visualLen;
+	float realLen = visualLen - 2 * offsize;
+
+	for (int32_t row = 0; row < num; ++row)
+	{
+		for (int32_t col = 0; col < num; ++col)
+		{
+			osg::Vec3 leftTopPoint = osg::Vec3(col*visualLen+offsize,0.f,row*visualLen+offsize);
+			osg::Vec3 rightTopPoint = osg::Vec3(leftTopPoint.x()+realLen,0.f,leftTopPoint.z());
+			osg::Vec3 rightBottomPoint = osg::Vec3(leftTopPoint.x()+realLen,0.f,leftTopPoint.z()+realLen);
+			osg::Vec3 leftBottomPoint = osg::Vec3(leftTopPoint.x(),0.f,leftTopPoint.z()+realLen);
+		
+			v->push_back(leftTopPoint);
+			v->push_back(rightTopPoint);
+			v->push_back(rightBottomPoint);
+			v->push_back(leftBottomPoint);
+
+			c->push_back(osg::Vec4(1.f, 0.f, 0.f, 1.f));
+			c->push_back(osg::Vec4(0.f, 1.f, 0.f, 1.f));
+			c->push_back(osg::Vec4(0.f, 0.f, 1.f, 1.f));
+			c->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.f));
+		}
+	}
 
 	// 为唯一的法线创建一个数组
 	osg::ref_ptr<osg::Vec3Array> n = new osg::Vec3Array;
@@ -103,104 +121,17 @@ osg::ref_ptr<osg::Geometry> createDrawable()// 这个Geometry与案例不符
 	n->push_back(osg::Vec3(0.f, -1.f, 0.f));
 
 	// 由保存的数据绘制四个顶点的多边形
-	geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
+	geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4 * graphNum));
 
-	return geom;
-}
-osg::ref_ptr<osg::Node> createSceneGraph3()
-{
-	// 创建根节点
-	osg::ref_ptr<osg::Group> root = new osg::Group;
-	{
-		// 在根节点的StateSet中禁止光照
-		// 使用PROECTED以保证这一修改不会被osgviewer覆盖
-		osg::StateSet* state = root->getOrCreateStateSet();
-		state->setMode(GL_LIGHTING,
-			osg::StateAttribute::OFF |
-			osg::StateAttribute::PROTECTED);
-	}
-
-	// 创建Geode叶节点并关联Drawable
-	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-	osg::Drawable* drawableTemp = new osg::Drawable();
-	geode->addDrawable(createDrawable().get());
-	osg::Matrix m;
-	{
-		// 左上角：使用缺省属性渲染几何体
-		osg::ref_ptr<osg::MatrixTransform> mt = new osg::MatrixTransform;
-		m.makeTranslate(-2.f, 0.f, 2.f);
-		mt->setMatrix(m);
-		root->addChild(mt.get());
-		mt->addChild(geode.get());
-
-	}
-
-	{
-		// 右上角：设置着色器为FLAT（单色）
-		osg::ref_ptr<osg::MatrixTransform> mt = new osg::MatrixTransform;
-		m.makeTranslate(2.f, 0.f, 2.f);
-		mt->setMatrix(m);
-		root->addChild(mt.get());
-		mt->addChild(geode.get());
-		osg::StateSet* state = mt->getOrCreateStateSet();
-		osg::ShadeModel* sm = new osg::ShadeModel();
-		sm->setMode(osg::ShadeModel::FLAT);
-		state->setAttribute(sm);
-	}
-
-	{
-		// 左下角：开启背面剔除
-		osg::ref_ptr<osg::MatrixTransform> mt = new osg::MatrixTransform;
-		m.makeTranslate(-2.f, 0.f, -2.f);
-		mt->setMatrix(m);
-		root->addChild(mt.get());
-		mt->addChild(geode.get());
-		osg::StateSet* state = mt->getOrCreateStateSet();
-		osg::CullFace* cf = new osg::CullFace();// 缺省值为BACK
-		state->setAttributeAndModes(cf);
-	}
-
-	{
-		// 右下角：设置多边形填充模式LINE（线框）
-		osg::ref_ptr<osg::MatrixTransform> mt = new osg::MatrixTransform;
-		m.makeTranslate(2.0f, 0.f, -2.f);
-		mt->setMatrix(m);
-		root->addChild(mt.get());
-		mt->addChild(geode.get());
-		osg::StateSet* state = mt->getOrCreateStateSet();
-		osg::PolygonMode* pm = new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
-		state->setAttributeAndModes(pm);
-
-		// 同时还设置线宽为3
-		osg::LineWidth* lw = new osg::LineWidth(3.f);
-		state->setAttribute(lw);
-	}
-
-	return root.get();
-}
-
-// 保存场景图形为.osg文件
-void saveAsOSGFile(osg::ref_ptr<osg::Node> root)
-{
-	if (!root.valid())
-	{
-		osg::notify(osg::FATAL) << "Failed in createSceneGraph()." << std::endl;
-	}
-
-	bool result = osgDB::writeNodeFile(*(root.get()), "Simple.osg");
-
-	if (!result)
-	{
-		osg::notify(osg::FATAL) << "Failed in osgDB::writeNode()." << std::endl;
-	}
+	return geode.get();
 }
 
 int main()
 {
 	osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
-	viewer->setUpViewInWindow(50,50,800,600);
+	//viewer->setUpViewInWindow(50,50,800,600);
 
-	viewer->setSceneData(createSceneGraph2());
+	viewer->setSceneData(createSceneGraph3());
 
 	return viewer->run();
 }
