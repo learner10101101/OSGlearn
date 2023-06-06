@@ -24,9 +24,9 @@
 #include <osg/LineStipple>
 
 //b站《2021版OSG教学》课程源码学习
-#define DAY  4
+#define DAY  0
 
-#if 0 //自定义学习
+#if 1 //自定义学习
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
 {
@@ -143,7 +143,7 @@ int main()
 	osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
 	//viewer->setUpViewInWindow(50,50,800,600);
 
-	viewer->setSceneData(createSceneGraph3());
+	viewer->setSceneData(createSceneGraph1());
 
 	return viewer->run();
 }
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
 
 		//创建纹理对象
 		osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
-		osg::ref_ptr<osg::Image> image = osgDB::readImageFile("C:/Users/袁壮/Desktop/测试/myTest.jpg");
+		osg::ref_ptr<osg::Image> image = osgDB::readImageFile("texture/myTest.jpg");
 		texture->setImage(image.get());
 
 		//创建状态集，并将纹理对象设置为当前状态的纹理单元0
