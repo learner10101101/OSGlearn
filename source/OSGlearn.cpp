@@ -19,9 +19,11 @@
 #include <osgGA/StateSetManipulator>
 #include <osg/MatrixTransform>
 #include <common.h>
+#include <osg/Point>
+#include <osg/LineWidth>
 
 //b站《2021版OSG教学》课程源码学习
-#define DAY  3
+#define DAY  4
 
 #if 0 //自定义学习
 // 绘制地球
@@ -148,7 +150,7 @@ int main()
 
 
 #if DAY == 1
-//自定义Viewer类的事件处理器
+//自定义Viewer类的事件处理器//#知识点
 //重写函数：bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) override
 //const osgGA::GUIEventAdapter& ea: 获取鼠标键盘事件
 //const osgGA::GUIActionAdapter& aa : Viewer的操作器，通过aa.asView()获取关联的Viewer指针，实现对Viewer的修改
@@ -271,6 +273,7 @@ int main(int argc, char** argv)
 
 #if DAY == 3
 //学习不同图元的绘制
+//点（osg::Point）和线（osg::LineWidth）属性对象的使用
 int main(int argc, char** argv)
 {
 	// 创建一个用于保存几何信息的对象
@@ -278,7 +281,7 @@ int main(int argc, char** argv)
 
 	// 创建四个顶点的数组
 	osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array;
-	geom->setVertexArray(v.get());// 注意，这里v是指针，但是用“.”来使用get()函数返回指针
+	geom->setVertexArray(v.get());// 注意，这里v是指针，但是用“.”来使用get()函数返回指针//#知识点
 	v->push_back(osg::Vec3(-1.f, 0.f, -1.f));
 	v->push_back(osg::Vec3(-0.5f, 0.f, -1.f));
 	v->push_back(osg::Vec3(-0.5f, 0.f, 1.f));
@@ -350,6 +353,22 @@ int main(int argc, char** argv)
 		osg::ref_ptr<osg::StateSet> stateSet = geom->getOrCreateStateSet();
 		stateSet->setTextureAttributeAndModes(0, texture.get());
 	}
+
+	{//设置点和线属性对象，设置点线的尺寸后，将属性对象设置到geom中，在线框模式下线宽由线对象控制（不显示点，不受点对象尺寸影响）；在点集模式下，点的尺寸由点对象控制//#知识点
+		// 创建点对象并设置属性
+		osg::ref_ptr<osg::Point> point = new osg::Point;
+		point->setSize(point->getMaxSize());   // 设置点的大小为10像素
+		std::cout << "point->getMaxSize() == " << point->getMaxSize() << std::endl;//通过point->getMaxSize()获取点最大直径为100，实际测试为20像素
+
+		// 创建线对象并设置属性
+		osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth;
+		lineWidth->setWidth(30);   // 设置线的宽度为2像素
+
+		// 将点对象和线对象应用到几何图形节点上的状态集中
+		osg::ref_ptr<osg::StateSet> stateSet = geom->getOrCreateStateSet();
+		stateSet->setAttributeAndModes(point.get());
+		stateSet->setAttributeAndModes(lineWidth.get());
+	}
 	
 	// 向Geode类添加几何体（Drawable）并返回Geode
 	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
@@ -362,4 +381,58 @@ int main(int argc, char** argv)
 	rpViewer->addEventHandler(new osgGA::StateSetManipulator(rpViewer->getCamera()->getOrCreateStateSet()));
 	return rpViewer->run();
 }
+#endif
+
+#if DAY == 4
+//点（osg::Point）和线（osg::LineWidth）属性对象的使用
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osg/Point>
+#include <osg/LineWidth>
+#include <osgViewer/Viewer>
+
+int main()
+{
+	// 创建几何图形节点
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+
+	// 创建顶点数组
+	osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+	vertices->push_back(osg::Vec3(-1.0, 0.0, 0.0));   // 起点
+	vertices->push_back(osg::Vec3(1.0, 0.0, 0.0));    // 终点
+	geom->setVertexArray(vertices.get());
+
+	// 创建绘制图元（线段）
+	osg::ref_ptr<osg::DrawArrays> drawArraysLines = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 2);
+	geom->addPrimitiveSet(drawArraysLines.get());
+
+	// 创建绘制图元（点）//顶点可以被重复使用，可以用来绘制不同的图元，即geom->addPrimitiveSet()可以添加多个DrawArrays对象//#知识点
+	osg::ref_ptr<osg::DrawArrays> drawArraysPoints = new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, 2);
+	geom->addPrimitiveSet(drawArraysPoints.get());
+
+	// 创建点对象并设置属性
+	osg::ref_ptr<osg::Point> point = new osg::Point;
+	point->setSize(10.0);   // 设置点的大小为10像素
+
+	// 创建线对象并设置属性
+	osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth;
+	lineWidth->setWidth(2.0);   // 设置线的宽度为2像素
+
+	// 将点对象和线对象应用到几何图形节点上的状态集中
+	osg::ref_ptr<osg::StateSet> stateSet = geom->getOrCreateStateSet();
+	stateSet->setAttributeAndModes(point.get());
+	stateSet->setAttributeAndModes(lineWidth.get());//stateSet->setAttributeAndModes可以添加多个属性对象//知识点
+
+	// 创建根节点，并将几何图形节点添加到根节点下
+	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+	geode->addDrawable(geom.get());
+
+	// 创建查看器并设置根节点
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(geode.get());
+
+	// 运行查看器
+	return viewer.run();
+}
+
 #endif
