@@ -1,4 +1,5 @@
-﻿// OSGlearn.cpp: 定义应用程序的入口点。
+﻿
+// OSGlearn.cpp: 定义应用程序的入口点。
 //
 
 #include "OSGlearn.h"
@@ -14,7 +15,13 @@
 #include <osgDB/WriteFile>
 #include <osg/Notify>
 #include <osg/Material>
+#include <osgViewer/ViewerEventHandlers>
+#include <osgGA/StateSetManipulator>
 
+//b站《2021版OSG教学》课程源码学习
+#define DAY  1
+
+#if 0 //自定义学习
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
 {
@@ -135,3 +142,75 @@ int main()
 
 	return viewer->run();
 }
+#endif
+
+
+#if DAY == 1
+//自定义Viewer类的事件处理器
+//重写函数：bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) override
+//const osgGA::GUIEventAdapter& ea: 获取鼠标键盘事件
+//const osgGA::GUIActionAdapter& aa : Viewer的操作器，通过aa.asView()获取关联的Viewer指针，实现对Viewer的修改
+class ToggleWireframeEventHandler : public osgGA::GUIEventHandler
+{
+public:
+	ToggleWireframeEventHandler() {}
+
+	bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) override
+	{
+		if (ea.getEventType() == osgGA::GUIEventAdapter::KEYDOWN && ea.getKey() == 'q')
+		{
+			osg::StateSet* stateSet = aa.asView()->getCamera()->getOrCreateStateSet();
+			osg::PolygonMode* polygonMode = dynamic_cast<osg::PolygonMode*>(stateSet->getAttribute(osg::StateAttribute::POLYGONMODE));
+			if (polygonMode)
+			{
+				if (polygonMode->getMode(osg::PolygonMode::FRONT_AND_BACK) == osg::PolygonMode::FILL)
+					polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
+				else
+					polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::FILL);
+			}
+			else
+			{
+				polygonMode = new osg::PolygonMode;
+				polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE);
+				stateSet->setAttributeAndModes(polygonMode, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+			}
+
+			return true; // 停止事件传递
+		}
+
+		return false; // 继续事件传递
+	}
+};
+
+int main(int argc, char** argv)
+{
+	int nType = 0;
+	while (nType < 4)
+	{
+		std::cout << "选择显示场景:" << std::endl;
+		std::cout << "1.最简场景" << std::endl;
+		std::cout << "2.显示模型" << std::endl;
+		std::cout << "3.键盘事件" << std::endl;
+		std::cout << "4.退出" << std::endl;
+		std::cin >> nType;
+		osg::ref_ptr<osgViewer::Viewer> rpViewer = new osgViewer::Viewer;
+		if (nType == 2 || nType == 3)
+		{
+			osg::ref_ptr<osg::Node> rpCow = osgDB::readNodeFile("cow.osg");
+			rpViewer->setSceneData(rpCow.get());
+		}
+		if (nType == 3)
+		{
+			rpViewer->addEventHandler(new osgViewer::StatsHandler);
+			rpViewer->addEventHandler(new osgViewer::WindowSizeHandler);
+			rpViewer->addEventHandler(new osgGA::StateSetManipulator(rpViewer->getCamera()->getOrCreateStateSet()));
+			rpViewer->addEventHandler(new ToggleWireframeEventHandler);//自定义事件处理器，通过“q”切换面模型和线框模型
+		}
+		if (nType < 4)
+		{
+			rpViewer->run();
+		}
+	}
+	return 0;
+}
+#endif

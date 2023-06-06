@@ -18,7 +18,7 @@ link_directories(${PROJECT_NAME} "dependencies/OpenSceneGraph-3.6.5-VC2019-64-Re
 add_executable (${PROJECT_NAME} "source/OSGlearn.cpp" "source/OSGlearn.h")
 
 # 链接库
-target_link_libraries(${PROJECT_NAME} debug osgd.lib osgDBd.lib osgViewerd.lib)
+target_link_libraries(${PROJECT_NAME} debug osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib osgManipulatord.lib)
 #target_link_libraries(${PROJECT_NAME} release osg.lib osgDB.lib osgViewer.lib)#注释说明：提示LINK : fatal error LNK1104: 无法打开文件“release.lib”
 
 # 拷贝DLL文件到可执行文件目录下
