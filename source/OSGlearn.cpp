@@ -21,6 +21,7 @@
 #include <common.h>
 #include <osg/Point>
 #include <osg/LineWidth>
+#include <osg/LineStipple>
 
 //b站《2021版OSG教学》课程源码学习
 #define DAY  4
@@ -389,6 +390,7 @@ int main(int argc, char** argv)
 #include <osg/Geometry>
 #include <osg/Point>
 #include <osg/LineWidth>
+#include <osg/LineStipple>
 #include <osgViewer/Viewer>
 
 int main()
@@ -418,10 +420,16 @@ int main()
 	osg::ref_ptr<osg::LineWidth> lineWidth = new osg::LineWidth;
 	lineWidth->setWidth(2.0);   // 设置线的宽度为2像素
 
-	// 将点对象和线对象应用到几何图形节点上的状态集中
+	// 创建线型对象并设置属性
+	osg::ref_ptr<osg::LineStipple> lineStipple = new osg::LineStipple;
+	lineStipple->setFactor(10);    // 点画线的点间距
+	lineStipple->setPattern(0xAAAA);  // 点画线的模式
+
+	// 将点对象,线对象,线型对象应用到几何图形节点上的状态集中
 	osg::ref_ptr<osg::StateSet> stateSet = geom->getOrCreateStateSet();
 	stateSet->setAttributeAndModes(point.get());
 	stateSet->setAttributeAndModes(lineWidth.get());//stateSet->setAttributeAndModes可以添加多个属性对象//知识点
+	stateSet->setAttributeAndModes(lineStipple.get());
 
 	// 创建根节点，并将几何图形节点添加到根节点下
 	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
