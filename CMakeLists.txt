@@ -5,17 +5,22 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("OSGlearn")
 
+# 设置文件在VS项目中的映射，并通过文件变量在add_executable中进行链接（非库文件的使用方式，一般是类文件或者函数文件）
+file(GLOB COMMON "common/*.h" "common/*.cpp")
+source_group("common" FILES ${COMMON})
+
 # 包含头文件目录
 include_directories("dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/include")
 include_directories("dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Release/include")
 include_directories("dependencies/OSG/include")
+include_directories("common")
 
 # 包含库文件目录
 link_directories(${PROJECT_NAME} "dependencies/OSG/OpenSceneGraph-3.6.5-VC2019-64-Debug/lib")
 link_directories(${PROJECT_NAME} "dependencies/OpenSceneGraph-3.6.5-VC2019-64-Release/lib")
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (${PROJECT_NAME} "source/OSGlearn.cpp" "source/OSGlearn.h")
+add_executable (${PROJECT_NAME} "source/OSGlearn.cpp" "source/OSGlearn.h" ${COMMON})
 
 # 链接库
 target_link_libraries(${PROJECT_NAME} debug osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib osgManipulatord.lib)

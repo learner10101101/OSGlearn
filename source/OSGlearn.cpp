@@ -17,9 +17,11 @@
 #include <osg/Material>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/StateSetManipulator>
+#include <osg/MatrixTransform>
+#include <common.h>
 
 //b站《2021版OSG教学》课程源码学习
-#define DAY  1
+#define DAY  2
 
 #if 0 //自定义学习
 // 绘制地球
@@ -213,4 +215,56 @@ int main(int argc, char** argv)
 	}
 	return 0;
 }
+#endif
+
+#if DAY == 2
+int main(int argc, char** argv)
+{
+	osg::ref_ptr<osgViewer::Viewer> rpViewer = new osgViewer::Viewer;
+	osg::ref_ptr<osg::Group> rpGroup = new osg::Group;
+	osg::ref_ptr<osg::Node> rpCow = FeCommon::readNode("cow.osg");
+	rpGroup->addChild(rpCow.get());
+	{
+		osg::ref_ptr<osg::MatrixTransform> rpMT = new osg::MatrixTransform;
+		rpMT->setMatrix(osg::Matrix::translate(0, 0, 10));
+		rpMT->addChild(rpCow.get());
+		FeCommon::setColor(rpMT.get(), osg::Vec4(1.0, 0.0, 0.0, 1.0));
+		rpGroup->addChild(rpMT.get());
+	}
+	{
+		//矩阵旋转关键函数为osg::Matrix::rotate，并且根据重载的方法，入参也各不相同
+		//实例中为：绕（0，0，1）轴，旋转90.0角度，即绕z轴旋转90.0角度
+
+		//矩阵平移osg::Matrix::translate
+		//osg::Matrix::translate(10,0,0)，即按照x轴正方向平移10个单位
+		osg::ref_ptr<osg::MatrixTransform> rpMTRT = new osg::MatrixTransform;
+		rpMTRT->setMatrix(osg::Matrix::rotate(osg::DegreesToRadians(90.0), osg::Vec3(0, 0, 1)) * osg::Matrix::translate(10, 0, 0));
+		rpMTRT->addChild(rpCow.get());
+		FeCommon::setColor(rpMTRT.get(), osg::Vec4(0.0, 1.0, 0.0, 1.0));
+		rpGroup->addChild(rpMTRT.get());
+		osg::ref_ptr<osg::MatrixTransform> rpMTTR = new osg::MatrixTransform;
+		rpMTTR->setMatrix(osg::Matrix::translate(10, 0, 0) * osg::Matrix::rotate(osg::DegreesToRadians(90.0), osg::Vec3(0, 0, 1)));
+		rpMTTR->addChild(rpCow.get());
+		FeCommon::setColor(rpMTTR.get(), osg::Vec4(0.0, 0.0, 1.0, 1.0));
+		rpGroup->addChild(rpMTTR.get());
+	}
+	{
+		//矩阵缩放，osg::Matrix::scale
+		//osg::Matrix::scale(10,10,10)，按照x，y，z三个轴方向放大10倍
+		osg::ref_ptr<osg::MatrixTransform> rpMTRT = new osg::MatrixTransform;
+		rpGroup->addChild(rpMTRT.get());
+		rpMTRT->addChild(rpCow.get());
+		rpMTRT->setMatrix(osg::Matrix::scale(10, 10, 10) * osg::Matrix::rotate(osg::DegreesToRadians(90.0), osg::Vec3(0, 0, 1)) * osg::Matrix::translate(50, 0, 0));
+		FeCommon::setColor(rpMTRT.get(), osg::Vec4(1.0, 1.0, 0.0, 1.0));
+
+	}
+	rpViewer->setSceneData(rpGroup.get());
+	rpViewer->addEventHandler(new osgViewer::StatsHandler);
+	rpViewer->addEventHandler(new osgViewer::WindowSizeHandler);
+	rpViewer->addEventHandler(new osgGA::StateSetManipulator(rpViewer->getCamera()->getOrCreateStateSet()));
+	return rpViewer->run();
+}
+#endif
+
+#if DAY == 3
 #endif
