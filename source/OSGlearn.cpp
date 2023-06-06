@@ -26,7 +26,7 @@
 //b站《2021版OSG教学》课程源码学习
 #define DAY  0
 
-#if 1 //自定义学习
+#if 0 //自定义学习
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
 {
