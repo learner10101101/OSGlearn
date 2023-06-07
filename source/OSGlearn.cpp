@@ -23,10 +23,8 @@
 #include <osg/LineWidth>
 #include <osg/LineStipple>
 
-//b站《2021版OSG教学》课程源码学习
-#define DAY  0
-
-#if 0 //自定义学习
+#if 0
+//#知识点：绘制场景图流程的简单熟悉
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
 {
@@ -150,8 +148,8 @@ int main()
 #endif
 
 
-#if DAY == 1
-//自定义Viewer类的事件处理器//#知识点
+#if 0
+////#知识点：自定义Viewer类的事件处理器
 //重写函数：bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) override
 //const osgGA::GUIEventAdapter& ea: 获取鼠标键盘事件
 //const osgGA::GUIActionAdapter& aa : Viewer的操作器，通过aa.asView()获取关联的Viewer指针，实现对Viewer的修改
@@ -220,10 +218,11 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if DAY == 2 
-//学习矩阵变换节点的使用：缩放scale，旋转rotate，平移translate（都是osg::Matrix的静态函数）
+#if 0
+//#知识点：学习矩阵变换节点的使用：缩放scale，旋转rotate，平移translate（都是osg::Matrix的静态函数）
 //osg::ref_ptr<osg::MatrixTransform> rpMTRT = new osg::MatrixTransform;
 //rpMTRT->setMatrix(osg::Matrix::scale(10, 10, 10)* osg::Matrix::rotate(osg::DegreesToRadians(90.0), osg::Vec3(0, 0, 1))* osg::Matrix::translate(50, 0, 0));
+
 int main(int argc, char** argv)
 {
 	osg::ref_ptr<osgViewer::Viewer> rpViewer = new osgViewer::Viewer;
@@ -272,9 +271,9 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if DAY == 3
-//学习不同图元的绘制
-//点（osg::Point）和线（osg::LineWidth）属性对象的使用
+#if 0
+//#知识点：学习不同图元的绘制，点（osg::Point）和线（osg::LineWidth）属性对象的使用
+
 int main(int argc, char** argv)
 {
 	// 创建一个用于保存几何信息的对象
@@ -282,7 +281,7 @@ int main(int argc, char** argv)
 
 	// 创建四个顶点的数组
 	osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array;
-	geom->setVertexArray(v.get());// 注意，这里v是指针，但是用“.”来使用get()函数返回指针//#知识点
+	geom->setVertexArray(v.get());// 注意，这里v是指针，但是用“.”来使用get()函数返回指针
 	v->push_back(osg::Vec3(-1.f, 0.f, -1.f));
 	v->push_back(osg::Vec3(-0.5f, 0.f, -1.f));
 	v->push_back(osg::Vec3(-0.5f, 0.f, 1.f));
@@ -355,7 +354,7 @@ int main(int argc, char** argv)
 		stateSet->setTextureAttributeAndModes(0, texture.get());
 	}
 
-	{//设置点和线属性对象，设置点线的尺寸后，将属性对象设置到geom中，在线框模式下线宽由线对象控制（不显示点，不受点对象尺寸影响）；在点集模式下，点的尺寸由点对象控制//#知识点
+	{//设置点和线属性对象，设置点线的尺寸后，将属性对象设置到geom中，在线框模式下线宽由线对象控制（不显示点，不受点对象尺寸影响）；在点集模式下，点的尺寸由点对象控制//#注意
 		// 创建点对象并设置属性
 		osg::ref_ptr<osg::Point> point = new osg::Point;
 		point->setSize(point->getMaxSize());   // 设置点的大小为10像素
@@ -384,8 +383,8 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if DAY == 4
-//点（osg::Point）和线（osg::LineWidth）属性对象的使用
+#if 0
+//#知识点：点（osg::Point）和线（osg::LineWidth）属性对象的使用
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Point>
@@ -408,7 +407,7 @@ int main()
 	osg::ref_ptr<osg::DrawArrays> drawArraysLines = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 2);
 	geom->addPrimitiveSet(drawArraysLines.get());
 
-	// 创建绘制图元（点）//顶点可以被重复使用，可以用来绘制不同的图元，即geom->addPrimitiveSet()可以添加多个DrawArrays对象//#知识点
+	// 创建绘制图元（点）//顶点可以被重复使用，可以用来绘制不同的图元，即geom->addPrimitiveSet()可以添加多个DrawArrays对象//#注意
 	osg::ref_ptr<osg::DrawArrays> drawArraysPoints = new osg::DrawArrays(osg::PrimitiveSet::POINTS, 0, 2);
 	geom->addPrimitiveSet(drawArraysPoints.get());
 
@@ -443,4 +442,66 @@ int main()
 	return viewer.run();
 }
 
+#endif
+
+#if 1
+//#知识点：自定义节点访问器
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * Chapter 4: Scene Graph Management
+ * a) How to create a node visitor
+*/
+
+#include <osg/Node>
+#include <osgDB/ReadFile>
+#include <iostream>
+
+class InfoVisitor : public osg::NodeVisitor
+{
+public:
+	InfoVisitor()
+		: osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), _indent(0) {}
+
+	virtual void apply(osg::Node& node)
+	{
+		for (int i = 0; i < _indent; ++i) std::cout << "  ";
+		std::cout << "[" << _indent + 1 << "] " << node.libraryName()
+			<< "::" << node.className() << std::endl;
+
+		_indent++;
+		traverse(node);
+		_indent--;
+	}
+
+	virtual void apply(osg::Geode& node)
+	{
+		for (int i = 0; i < _indent; ++i) std::cout << "  ";
+		std::cout << "[" << _indent + 1 << "] " << node.libraryName()
+			<< "::" << node.className() << std::endl;
+
+		_indent++;
+		traverse(node);
+		_indent--;
+	}
+
+protected:
+	int _indent;
+};
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* root = osgDB::readNodeFiles(arguments);
+	if (!root) root = osgDB::readNodeFile("axes.osg");
+
+	InfoVisitor infoVisitor;
+	if (root) root->accept(infoVisitor);
+
+	osg::ref_ptr<osgViewer::Viewer> rpViewer = new osgViewer::Viewer;
+	rpViewer->setSceneData(root);
+	rpViewer->addEventHandler(new osgViewer::StatsHandler);
+	rpViewer->addEventHandler(new osgViewer::WindowSizeHandler);
+	rpViewer->addEventHandler(new osgGA::StateSetManipulator(rpViewer->getCamera()->getOrCreateStateSet()));
+	return rpViewer->run();
+}
 #endif
