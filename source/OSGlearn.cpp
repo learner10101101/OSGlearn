@@ -444,8 +444,10 @@ int main()
 
 #endif
 
-#if 1
+#if 0
 //#知识点：自定义节点访问器
+//重载了osg::Node& node和osg::Geode& node的apply，Geode节点走osg::Geode& node的apply,其余节点走osg::Node& node的apply
+
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
  * Chapter 4: Scene Graph Management
@@ -465,7 +467,7 @@ public:
 	virtual void apply(osg::Node& node)
 	{
 		for (int i = 0; i < _indent; ++i) std::cout << "  ";
-		std::cout << "[" << _indent + 1 << "] " << node.libraryName()
+		std::cout << "[a" << _indent + 1 << "] " << node.libraryName()
 			<< "::" << node.className() << std::endl;
 
 		_indent++;
@@ -476,7 +478,7 @@ public:
 	virtual void apply(osg::Geode& node)
 	{
 		for (int i = 0; i < _indent; ++i) std::cout << "  ";
-		std::cout << "[" << _indent + 1 << "] " << node.libraryName()
+		std::cout << "[b" << _indent + 1 << "] " << node.libraryName()
 			<< "::" << node.className() << std::endl;
 
 		_indent++;
@@ -504,4 +506,267 @@ int main(int argc, char** argv)
 	rpViewer->addEventHandler(new osgGA::StateSetManipulator(rpViewer->getCamera()->getOrCreateStateSet()));
 	return rpViewer->run();
 }
+#endif
+
+#if 0
+//#知识点：使用更新回调实现旋转动画
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to set a node update callback
+*/
+
+#include <osg/io_utils>
+#include <osg/PositionAttitudeTransform>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+#include <iostream>
+
+class RotateCallback : public osg::NodeCallback
+{
+public:
+	RotateCallback() : _rotateZ(0.0) {}
+
+	virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		osg::PositionAttitudeTransform* pat =
+			dynamic_cast<osg::PositionAttitudeTransform*>(node);
+		if (pat)
+		{
+			osg::Quat quat(osg::DegreesToRadians(_rotateZ), osg::Z_AXIS);
+			pat->setAttitude(quat);
+			_rotateZ += 1.0;
+		}
+		traverse(node, nv);
+	}
+
+protected:
+	double _rotateZ;
+};
+
+class InfoCallback : public osg::NodeCallback
+{
+public:
+	virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		osg::PositionAttitudeTransform* pat =
+			dynamic_cast<osg::PositionAttitudeTransform*>(node);
+		if (pat)
+		{
+			double angle = 0.0;
+			osg::Vec3 axis;
+			pat->getAttitude().getRotate(angle, axis);
+
+			std::cout << "Node is rotating around the (" << axis << ") axis, "
+				<< osg::RadiansToDegrees(angle) << " degrees" << std::endl;
+		}
+		traverse(node, nv);
+	}
+};
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* model = osgDB::readNodeFiles(arguments);
+	if (!model) model = osgDB::readNodeFile("cow.osg");
+
+	osg::ref_ptr<osg::PositionAttitudeTransform> pat =
+		new osg::PositionAttitudeTransform;
+	pat->addChild(model);
+
+	pat->setUpdateCallback(new RotateCallback);
+	pat->addUpdateCallback(new InfoCallback);//这个添加多一个更新回调，不会覆盖上一个回调
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(pat.get());
+	return viewer.run();
+}
+
+#endif
+
+#if 0
+//#知识点：使用空间变换节点
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create different transform nodes
+*/
+
+#include <osg/AutoTransform>
+#include <osg/MatrixTransform>
+#include <osg/PositionAttitudeTransform>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+osg::Transform* createAutoTransform(double posX, osg::Node* model)
+{
+	osg::ref_ptr<osg::AutoTransform> at = new osg::AutoTransform;
+	at->setAutoRotateMode(osg::AutoTransform::ROTATE_TO_SCREEN);
+	at->setPosition(osg::Vec3(posX, 0.0, 0.0));
+
+	at->addChild(model);
+	return at.release();
+}
+
+osg::Transform* createMatrixTransform(double posX, double rotateZ, osg::Node* model)
+{
+	osg::ref_ptr<osg::MatrixTransform> mt = new osg::MatrixTransform;
+	mt->setMatrix(osg::Matrix::rotate(rotateZ, osg::Z_AXIS) *
+		osg::Matrix::translate(posX, 0.0, 0.0));
+
+	mt->addChild(model);
+	return mt.release();
+}
+
+osg::Transform* createPositionAttitudeTransform(double posX, double rotateZ, osg::Node* model)
+{
+	osg::ref_ptr<osg::PositionAttitudeTransform> pat = new osg::PositionAttitudeTransform;
+	pat->setPosition(osg::Vec3(posX, 0.0, 0.0));
+	pat->setAttitude(osg::Quat(rotateZ, osg::Z_AXIS));
+
+	pat->addChild(model);
+	return pat.release();
+}
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* model = osgDB::readNodeFiles(arguments);
+	if (!model) model = osgDB::readNodeFile("axes.osg");
+
+	osg::ref_ptr<osg::Group> root = new osg::Group;
+	root->addChild(createMatrixTransform(-5.0, osg::PI / 4, model));
+	root->addChild(createAutoTransform(0.0, model));
+	root->addChild(createPositionAttitudeTransform(5.0, -osg::PI / 4, model));
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
+	return viewer.run();
+}
+
+
+#endif
+
+#if 0
+//#知识点：使用开关节点
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create a switch node
+*/
+
+#include <osg/Switch>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+class CessnaCallback : public osg::NodeCallback
+{
+public:
+	static const int _fireStartFrame = 120;
+
+	virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		osg::Switch* cessnaSwitch = dynamic_cast<osg::Switch*>(node);
+		if (cessnaSwitch && nv)
+		{
+			const osg::FrameStamp* frameStamp = nv->getFrameStamp();
+			if (frameStamp)
+			{
+				if (_fireStartFrame < frameStamp->getFrameNumber())
+				{
+					cessnaSwitch->setValue(0, false);//开关节点根据子节点索引设置子节点是否显示//#注意
+					cessnaSwitch->setValue(1, true);
+				}
+			}
+		}
+		traverse(node, nv);
+	}
+};
+
+int main(int argc, char** argv)
+{
+	osg::ref_ptr<osg::Switch> root = new osg::Switch;
+	root->addChild(osgDB::readNodeFile("cessna.osg"), true);
+	root->addChild(osgDB::readNodeFile("cessnafire.osg"), false);
+	root->setUpdateCallback(new CessnaCallback);
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
+	viewer.addEventHandler(new osgViewer::StatsHandler);
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler);
+	viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
+	return viewer.run();
+}
+
+#endif
+
+#if 0
+//#知识点：使用LOD节点
+//测试场景：读取三个精细度（即顶点数）不同的模型，在不同的视点与模型距离使用不同的模型，
+//近时用精细模型，远时用粗糙模型，减少渲染压力
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create a Level-of-Details node
+*/
+
+#include <osg/LOD>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+int main(int argc, char** argv)
+{
+	osg::Node* model = osgDB::readNodeFile("bunny-high.ive");
+	float r = model->getBound().radius();
+
+	osg::ref_ptr<osg::LOD> root = new osg::LOD;
+	root->addChild(osgDB::readNodeFile("bunny-low.ive"), r * 7, FLT_MAX);
+	root->addChild(osgDB::readNodeFile("bunny-mid.ive"), r * 3, r * 7);
+	root->addChild(model, 0.0, r * 3);
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
+	viewer.addEventHandler(new osgViewer::StatsHandler);
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler);
+	viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
+	return viewer.run();
+}
+
+#endif
+
+#if 1
+//知识点：使用代理节点
+//测试场景：
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create a proxy node
+*/
+
+#include <osg/ProxyNode>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::ref_ptr<osg::ProxyNode> root = new osg::ProxyNode;
+
+	unsigned int childrenNo = 0;
+	for (int i = 1; i < arguments.argc(); ++i)
+	{
+		if (arguments.isString(i))
+			root->setFileName(childrenNo++, arguments[i]);
+	}
+	if (!root->getNumFileNames())
+		root->setFileName(0, "cow.osg");
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
+	viewer.addEventHandler(new osgViewer::StatsHandler);
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler);
+	viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
+	return viewer.run();
+}
+
 #endif
