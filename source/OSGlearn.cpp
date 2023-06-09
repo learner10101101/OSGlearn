@@ -890,7 +890,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 1
+#if 0
 //#知识点：几何体的更新回调函数的写法，在绘图函数内修改顶点数组
 //#测试场景：利用几何体的更新回调函数修改顶点数组，是的线图元进行环状运动
 
@@ -950,6 +950,49 @@ int main(int argc, char** argv)
 	geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 	geode->getOrCreateStateSet()->setAttribute(new osg::LineWidth(2.0));
 	geode->addDrawable(lineGeom.get());
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(geode.get());
+	return viewer.run();
+}
+
+#endif
+
+
+#if 1
+
+//#知识点：绘制位图图像，绘制的位图不是能够旋转的几何体，所以用户观察角度的变化不会影响位图的朝向
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create a bitmap in the world
+*/
+
+#include <osg/DrawPixels>
+#include <osg/Geode>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+int main(int argc, char** argv)
+{
+	osg::ref_ptr<osg::DrawPixels> bitmap1 = new osg::DrawPixels;
+	bitmap1->setPosition(osg::Vec3(0.0, 0.0, 0.0));
+	bitmap1->setImage(osgDB::readImageFile("osg64.png"));
+
+	osg::ref_ptr<osg::DrawPixels> bitmap2 = new osg::DrawPixels;
+	bitmap2->setPosition(osg::Vec3(80.0, 0.0, 0.0));
+	bitmap2->setImage(osgDB::readImageFile("osg128.png"));
+
+	osg::ref_ptr<osg::DrawPixels> bitmap3 = new osg::DrawPixels;
+	bitmap3->setPosition(osg::Vec3(200.0, 0.0, 0.0));
+	bitmap3->setImage(osgDB::readImageFile("osg256.png"));
+	bitmap3->setSubImageDimensions(64, 64, 128, 128);//剪裁出子图像//位置定位方式为：左上顶点+宽高
+	bitmap3->setUseSubImage(true);//设置为子图像
+
+	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+	geode->addDrawable(bitmap1.get());
+	geode->addDrawable(bitmap2.get());
+	geode->addDrawable(bitmap3.get());
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(geode.get());
