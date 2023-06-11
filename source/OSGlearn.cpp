@@ -1002,7 +1002,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 1
+#if 0
 
 //#知识点：绘制文字，包括文字字体、大小、颜色和内容的设置，以及将中文字符转换到宽字符集的方法
 
@@ -1067,6 +1067,141 @@ int main(int argc, char** argv)
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(geode.get());
+	return viewer.run();
+}
+
+#endif
+
+#if 0
+//#知识点：创建相机节点，投影矩阵和观察矩阵是相机节点必不可少的设置
+
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create a bird's eye view
+*/
+
+#include <osg/Camera>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+osg::Camera* createBirdsEye(const osg::BoundingSphere& bs)
+{
+	osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+	camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+
+	double viewDistance = 2.0 * bs.radius();
+	double znear = viewDistance - bs.radius();
+	double zfar = viewDistance + bs.radius();
+	float top = bs.radius();
+	float right = bs.radius();
+	camera->setProjectionMatrixAsOrtho(-right, right, -top, top, znear, zfar);
+
+	osg::Vec3d upDirection(0.0, 1.0, 0.0);
+	osg::Vec3d viewDirection(0.0, 0.0, 1.0);
+	osg::Vec3d center = bs.center();//模型的中心
+	osg::Vec3d eyePoint = center + viewDirection * viewDistance;//视点位置：看向模型=模型中心-（相机的位置）=模型中心-（-（世界坐标中的相机位置））=模型中心+世界坐标中的相机位置
+	camera->setViewMatrixAsLookAt(eyePoint, center, upDirection);
+
+	return camera.release();
+}
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* model = osgDB::readNodeFiles(arguments);
+	if (!model) model = osgDB::readNodeFile("lz.osg");
+
+	osg::Camera* camera = createBirdsEye(model->getBound());
+	camera->addChild(model);
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(camera);
+	return viewer.run();
+}
+
+#endif
+
+#if 1
+//#知识点：渲染场景到纹理，设置相机节点的渲染目标为帧缓存对象，通过绑定帧缓存中的颜色缓存到纹理中实现纹理烘焙
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * An example of implementing Render-to-Texture (RTT)
+*/
+
+#include <osg/Camera>
+#include <osg/Texture2D>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+
+//定义了一个空的二维纹理，用于保存将要烘焙的子场景
+osg::Texture* createRttTexture(int texWidth, int texHeight)
+{
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
+	texture->setInternalFormat(GL_RGBA);
+	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+
+	texture->setTextureSize(texWidth, texHeight);
+	return texture.release();
+}
+
+//定义一个相机节点，渲染目标设置为帧缓存对象FBO
+osg::Camera* createRttCamera(int texWidth, int texHeight, const osg::BoundingSphere& bs)
+{
+	osg::ref_ptr<osg::Camera> rttCamera = new osg::Camera;
+	rttCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	rttCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+
+	rttCamera->setViewport(0, 0, texWidth, texHeight);
+	rttCamera->setRenderOrder(osg::Camera::PRE_RENDER);//指示这个相机节点的内容将在主场景之前进行绘制，即在主场景开始渲染之前，就可以完成纹理烘焙工作//#注意
+	rttCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);//渲染目标设置为帧缓存FBO
+
+	double viewDistance = 2.0 * bs.radius();
+	double znear = viewDistance - bs.radius();
+	double zfar = viewDistance + bs.radius();
+	float top = 0.6 * znear;
+	float right = 0.8 * znear;
+	rttCamera->setProjectionMatrixAsFrustum(-right, right, -top, top, znear, zfar);
+
+	osg::Vec3d upDirection(0.0, 0.0, 1.0);
+	osg::Vec3d viewDirection(0.0, -1.0, 0.0);
+	osg::Vec3d center = bs.center();
+	osg::Vec3d eyePoint = center + viewDirection * viewDistance;
+	rttCamera->setViewMatrixAsLookAt(eyePoint, center, upDirection);
+
+	return rttCamera.release();
+}
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* model = osgDB::readNodeFiles(arguments);
+	if (!model) model = osgDB::readNodeFile("axes.osg");
+	model->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+	osg::ref_ptr<osg::Geode> quad = new osg::Geode;
+	quad->addDrawable(osg::createTexturedQuadGeometry(
+		osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(1.0, 0.0, 0.0), osg::Vec3(0.0, 0.0, 1.0)));
+
+	//这里要求纹理的尺寸（setTextureSize()设置）和FBO相机的视口大小（setViewport）必须一致//#注意
+	int texWidth = 512, texHeight = 512;
+	osg::Camera* rttCamera = createRttCamera(texWidth, texHeight, model->getBound());
+	osg::Texture* rttTexture = createRttTexture(texWidth, texHeight);
+
+	rttCamera->addChild(model);//将子场景追加到FBO相机下
+	rttCamera->attach(osg::Camera::COLOR_BUFFER, rttTexture);//渲染到纹理中，实现纹理烘焙//注意
+	quad->getOrCreateStateSet()->setTextureAttributeAndModes(0, rttTexture);
+
+	osg::ref_ptr<osg::Group> root = new osg::Group;
+	root->addChild(quad.get());
+	root->addChild(rttCamera);//相机节点提供了功能：视图控制+设置渲染目标为帧缓存对象，通过绑定帧缓存中的颜色缓存到纹理中实现纹理烘焙
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
 	return viewer.run();
 }
 
