@@ -1123,7 +1123,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 1
+#if 0
 //#知识点：渲染场景到纹理，设置相机节点的渲染目标为帧缓存对象，通过绑定帧缓存中的颜色缓存到纹理中实现纹理烘焙
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
@@ -1202,6 +1202,62 @@ int main(int argc, char** argv)
 
 	osgViewer::Viewer viewer;
 	viewer.setSceneData(root.get());
+	return viewer.run();
+}
+
+#endif
+
+#if 1
+//#知识点：创建单视景器的多个窗口显示（通过设置相机来实现）
+
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to create cameras on multi-windows
+*/
+
+#include <osg/Group>
+#include <osgDB/ReadFile>
+#include <osgViewer/Viewer>
+
+osg::Camera* createCamera(int x, int y, int w, int h)
+{
+	osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+	traits->windowDecoration = false;//是否显示窗口的标题栏
+	traits->x = x;
+	traits->y = y;
+	traits->width = w;
+	traits->height = h;
+	traits->doubleBuffer = true;
+
+	osg::DisplaySettings* ds = osg::DisplaySettings::instance();
+	traits->alpha = ds->getMinimumNumAlphaBits();
+	traits->stencil = ds->getMinimumNumStencilBits();
+	traits->sampleBuffers = ds->getMultiSamples();
+	traits->samples = ds->getNumMultiSamples();
+
+	osg::ref_ptr<osg::GraphicsContext> gc =
+		osg::GraphicsContext::createGraphicsContext(traits.get());//创建图形设备环境，使用osg::GraphicsContext::Traits对象进行相关属性设置
+
+	osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+	camera->setGraphicsContext(gc.get());
+	camera->setViewport(new osg::Viewport(0, 0, traits->width, traits->height));//视口大小与图形设备大小一致（图形设备即窗口）
+	return camera.release();
+}
+
+int main(int argc, char** argv)
+{
+	osg::ArgumentParser arguments(&argc, argv);
+	osg::Node* model = osgDB::readNodeFiles(arguments);
+	if (!model) model = osgDB::readNodeFile("cow.osg");
+
+	//向视景器中添加多个从属相机，它们共享主相机的观察矩阵和投影矩阵，以及同一个场景树结构，并进行投影矩阵的适当偏移，以实现“多屏扩展”的效果
+	osgViewer::Viewer viewer;
+ 	viewer.addSlave(createCamera(100, 100, 400, 300), osg::Matrixd::translate(1.0, -1.0, 0.0), osg::Matrixd());
+ 	viewer.addSlave(createCamera(505, 100, 400, 300), osg::Matrixd::translate(-1.0, -1.0, 0.0), osg::Matrixd());
+ 	viewer.addSlave(createCamera(100, 405, 400, 300), osg::Matrixd::translate(1.0, 1.0, 0.0), osg::Matrixd());
+ 	viewer.addSlave(createCamera(505, 405, 400, 300), osg::Matrixd::translate(-1.0, 1.0, 0.0), osg::Matrixd());
+	viewer.setSceneData(model);
 	return viewer.run();
 }
 
