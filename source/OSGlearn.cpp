@@ -1263,7 +1263,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 1
+#if 0
 //#知识点：创建多视景器类osgViewer::CompositeViewer的多窗口显示，每个窗口都有各自的场景数据
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -1293,6 +1293,80 @@ int main(int argc, char** argv)
 	compositeViewer.addView(view2.get());
 	compositeViewer.addView(view3.get());
 	return compositeViewer.run();
+}
+
+#endif
+
+#if 1
+//#知识点：自定义事件处理器，处理多个键盘事件
+//测试场景：
+//按下空格键，将鼠标光标自动定位到窗口中心
+//控制开关节点，按下1键显示第一个子节点，按下2键显示第二个子节点
+
+
+/* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
+ * OpenSceneGraph Engine Book - Design and Implementation
+ * How to handle keyboard events
+*/
+
+#include <osg/Group>
+#include <osgDB/ReadFile>
+#include <osgGA/GUIEventHandler>
+#include <osgViewer/Viewer>
+
+class KeyboardHandler : public osgGA::GUIEventHandler
+{
+public:
+	virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa,
+		osg::Object*, osg::NodeVisitor*)
+	{
+		osgViewer::Viewer* viewer = dynamic_cast<osgViewer::Viewer*>(&aa);
+		if (!viewer) return false;
+
+		switch (ea.getEventType())
+		{
+		case osgGA::GUIEventAdapter::KEYDOWN:
+			if (ea.getKey() == osgGA::GUIEventAdapter::KEY_Space)
+			{
+				int width = ea.getWindowWidth();
+				int height = ea.getWindowHeight();
+				viewer->requestWarpPointer(width * 0.5, height * 0.5);
+			}
+			else
+			{
+				osg::Switch* root = dynamic_cast<osg::Switch*>(viewer->getSceneData());
+				if (!root) return false;
+
+				if (ea.getKey() == '1')
+				{
+					root->setValue(0, true);
+					root->setValue(1, false);
+				}
+				else if (ea.getKey() == '2')
+				{
+					root->setValue(0, false);
+					root->setValue(1, true);
+				}
+				return true;
+			}
+			break;
+		default:
+			break;
+		}
+		return false;
+	}
+};
+
+int main(int argc, char** argv)
+{
+	osg::ref_ptr<osg::Switch> root = new osg::Switch;
+	root->addChild(osgDB::readNodeFile("cessna.osg"), true);
+	root->addChild(osgDB::readNodeFile("cessnafire.osg"), false);
+
+	osgViewer::Viewer viewer;
+	viewer.setSceneData(root.get());
+	viewer.addEventHandler(new KeyboardHandler);
+	return viewer.run();
 }
 
 #endif
