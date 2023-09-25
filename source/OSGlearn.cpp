@@ -1,4 +1,5 @@
-﻿
+﻿//#TODO:通过gtest库来分类知识点，doxgen导出说明文件，重新熟悉osg和opengl
+
 // OSGlearn.cpp: 定义应用程序的入口点。
 //
 
@@ -23,8 +24,8 @@
 #include <osg/LineWidth>
 #include <osg/LineStipple>
 
-#if 0
-//#知识点：绘制场景图流程的简单熟悉
+#if 1 //#知识点：绘制场景图流程的简单熟悉
+
 // 绘制地球
 osg::ref_ptr<osg::Node> createSceneGraph1()
 {
@@ -148,8 +149,8 @@ int main()
 #endif
 
 
-#if 0
-////#知识点：自定义Viewer类的事件处理器
+#if 0 //#知识点：自定义Viewer类的事件处理器
+
 //重写函数：bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) override
 //const osgGA::GUIEventAdapter& ea: 获取鼠标键盘事件
 //const osgGA::GUIActionAdapter& aa : Viewer的操作器，通过aa.asView()获取关联的Viewer指针，实现对Viewer的修改
@@ -218,8 +219,8 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
-//#知识点：学习矩阵变换节点的使用：缩放scale，旋转rotate，平移translate（都是osg::Matrix的静态函数）
+#if 0 //#知识点：学习矩阵变换节点的使用：缩放scale，旋转rotate，平移translate（都是osg::Matrix的静态函数）
+
 //osg::ref_ptr<osg::MatrixTransform> rpMTRT = new osg::MatrixTransform;
 //rpMTRT->setMatrix(osg::Matrix::scale(10, 10, 10)* osg::Matrix::rotate(osg::DegreesToRadians(90.0), osg::Vec3(0, 0, 1))* osg::Matrix::translate(50, 0, 0));
 
@@ -271,8 +272,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
-//#知识点：学习不同图元的绘制，点（osg::Point）和线（osg::LineWidth）属性对象的使用
+#if 0 //#知识点：学习不同图元的绘制，点（osg::Point）和线（osg::LineWidth）属性对象的使用
 
 int main(int argc, char** argv)
 {
@@ -383,8 +383,8 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
-//#知识点：点（osg::Point）和线（osg::LineWidth）属性对象的使用
+#if 0 //#知识点：点（osg::Point）和线（osg::LineWidth）属性对象的使用
+
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Point>
@@ -444,8 +444,8 @@ int main()
 
 #endif
 
-#if 0
-//#知识点：自定义节点访问器
+#if 0 //#知识点：自定义节点访问器
+
 //重载了osg::Node& node和osg::Geode& node的apply，Geode节点走osg::Geode& node的apply,其余节点走osg::Node& node的apply
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
@@ -508,8 +508,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
-//#知识点：使用更新回调实现旋转动画
+#if 0 //#知识点：使用更新回调实现旋转动画
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -584,8 +583,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：使用空间变换节点
+#if 0 //#知识点：使用空间变换节点
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -647,8 +645,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：使用开关节点
+#if 0 //#知识点：使用开关节点
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -700,8 +697,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：使用LOD节点
+#if 0 //#知识点：使用LOD节点
+
 //测试场景：读取三个精细度（即顶点数）不同的模型，在不同的视点与模型距离使用不同的模型，
 //近时用精细模型，远时用粗糙模型，减少渲染压力
 
@@ -734,8 +731,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//知识点：使用代理节点
+#if 0 //知识点：使用代理节点
+
 //测试场景：
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
@@ -772,8 +769,8 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 0
-//#知识点：构建osg::Geometry对象进行绘制图形
+#if 0 //#知识点：构建osg::Geometry对象进行绘制图形
+
 //测试场景：通过创建顶点数组、颜色数组、法线数组和纹理数组，构造一个简单的人字顶房屋
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
@@ -890,8 +887,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：几何体的更新回调函数的写法，在绘图函数内修改顶点数组
+#if 0 //#知识点：几何体的更新回调函数的写法，在绘图函数内修改顶点数组
+
 //#测试场景：利用几何体的更新回调函数修改顶点数组，是的线图元进行环状运动
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
@@ -959,9 +956,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 0
-
-//#知识点：绘制位图图像，绘制的位图不是能够旋转的几何体，所以用户观察角度的变化不会影响位图的朝向
+#if 0 //#知识点：绘制位图图像，绘制的位图不是能够旋转的几何体，所以用户观察角度的变化不会影响位图的朝向
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -1002,9 +997,8 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 0
+#if 0 //#知识点：绘制文字，包括文字字体、大小、颜色和内容的设置，以及将中文字符转换到宽字符集的方法
 
-//#知识点：绘制文字，包括文字字体、大小、颜色和内容的设置，以及将中文字符转换到宽字符集的方法
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -1123,8 +1117,7 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：渲染场景到纹理，设置相机节点的渲染目标为帧缓存对象，通过绑定帧缓存中的颜色缓存到纹理中实现纹理烘焙
+#if 0 //#知识点：渲染场景到纹理，设置相机节点的渲染目标为帧缓存对象，通过绑定帧缓存中的颜色缓存到纹理中实现纹理烘焙
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -1263,8 +1256,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：创建多视景器类osgViewer::CompositeViewer的多窗口显示，每个窗口都有各自的场景数据
+#if 0 //#知识点：创建多视景器类osgViewer::CompositeViewer的多窗口显示，每个窗口都有各自的场景数据
+
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
  * How to create a compsite viewer
@@ -1297,8 +1290,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：自定义事件处理器，处理多个键盘事件
+#if 0 //#知识点：自定义事件处理器，处理多个键盘事件
+
 //测试场景：
 //按下空格键，将鼠标光标自动定位到窗口中心
 //控制开关节点，按下1键显示第一个子节点，按下2键显示第二个子节点
@@ -1371,8 +1364,8 @@ int main(int argc, char** argv)
 
 #endif
 
-#if 0
-//#知识点：为对象添加拖拽器，操控这个对象沿轴运动（未测试出效果）
+#if 0 //#知识点：为对象添加拖拽器，操控这个对象沿轴运动（未测试出效果）
+
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
@@ -1493,8 +1486,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 1
-//#知识点：在普通Windows窗口上嵌入OSG视景器（WinMain函数是用于Windows图形界面程序（GUI）的入口函数，无法正确运行）
+#if 0 //#知识点：在普通Windows窗口上嵌入OSG视景器（WinMain函数是用于Windows图形界面程序（GUI）的入口函数，无法正确运行，存在编译错误）
 
 /* -*-c++-*- Copyright (C) 2009 Wang Rui <wangray84 at gmail dot com>
  * OpenSceneGraph Engine Book - Design and Implementation
